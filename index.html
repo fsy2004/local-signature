@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="description" content="中文手写签名工具，手机、平板、电脑直接书写，导出透明 PNG。签名在浏览器本地处理，无需注册。">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; connect-src 'none'; base-uri 'none'; form-action 'none'">
+<link rel="icon" href="data:,">
+<meta name="color-scheme" content="light"><title>本地手写签名</title>
+<style>
+:root{font-family:system-ui,-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;color:#203a38;background:#f2f5f2;font-synthesis:none}
+*{box-sizing:border-box}
+body{margin:0;padding:24px max(16px,env(safe-area-inset-right)) max(24px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+main{max-width:880px;margin:auto}
+header{display:flex;justify-content:space-between;align-items:center;margin:8px 0 22px}
+h1{font-size:27px;margin:4px 0}
+p{line-height:1.7}
+.eyebrow{font-size:12px;letter-spacing:2px;color:#598078}
+.badge{font-size:12px;border:1px solid #cbdad2;border-radius:30px;padding:8px 12px;color:#417366}
+.intro{font-size:14px;color:#637772;margin:0 0 16px}
+.card{background:white;border:1px solid #dce5df;border-radius:20px;box-shadow:0 12px 40px #234f3810;overflow:hidden}
+.canvashead{display:flex;justify-content:space-between;padding:16px 20px;font-size:13px;color:#61796f;border-bottom:1px solid #e9eeea}
+.surface{position:relative;background-color:#fff;background-image:conic-gradient(#edf0ed 25%,transparent 0 50%,#edf0ed 0 75%,transparent 0);background-size:20px 20px}
+.surface.white{background-image:none}
+canvas{display:block;width:100%;aspect-ratio:8/5;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;cursor:crosshair}
+#hint{position:absolute;inset:0;display:grid;place-content:center;pointer-events:none;color:#82958c;text-align:center;font-size:24px}
+#hint small{font-size:13px;margin-top:10px}
+.toolbar{padding:18px 20px;display:flex;gap:18px;flex-wrap:wrap;align-items:center;border-top:1px solid #e9eeea}
+button,input,select{font:inherit}
+button{min-height:44px;border:1px solid #cedbd4;background:#fff;border-radius:10px;padding:10px 16px;color:#29483d;cursor:pointer;touch-action:manipulation}
+button:hover{background:#edf4ef}
+button:disabled{opacity:.45;cursor:default}
+button:focus-visible,input:focus-visible{outline:3px solid #78b5a2;outline-offset:3px}
+.tool{display:flex;align-items:center;gap:10px;font-size:14px}
+.colors{display:flex;gap:6px}
+.color{width:38px;min-height:38px;padding:0;border-radius:50%;border:4px solid white;box-shadow:0 0 0 1px #ddd}
+.color[aria-pressed=true]{box-shadow:0 0 0 2px #32836a}
+.color[data-color="#111111"]{background:#111}
+.color[data-color="#41464b"]{background:#41464b}
+.color[data-color="#164b9b"]{background:#164b9b}
+input[type=range]{width:110px;accent-color:#236e58}
+input[type=checkbox]{width:18px;height:18px;accent-color:#236e58}
+.filename{display:flex;align-items:center;gap:10px;font-size:14px;margin:20px 0 14px}
+.filename input{min-width:0;flex:1;max-width:290px;padding:11px;border:1px solid #cbd9d1;border-radius:9px;background:#fff}
+.actions{display:grid;grid-template-columns:1fr 1.5fr 1fr;gap:10px}
+.primary{background:#236e58;color:white;border-color:#236e58}
+.primary:hover{background:#18563f}
+.secondary{background:#e4eee8}
+#status{min-height:25px;font-size:14px;color:#376953;margin:14px 0 6px}
+.foot{font-size:12px;color:#6b7e75;line-height:1.8}
+details{font-size:13px;margin-top:16px}
+summary{cursor:pointer}
+dialog{max-width:620px;width:calc(100% - 28px);border:1px solid #cbd9d1;border-radius:18px;padding:22px;box-shadow:0 20px 80px #0003}
+dialog::backdrop{background:#142e2866}
+dialog img{display:block;width:100%;background-color:white;background-image:conic-gradient(#edf0ed 25%,transparent 0 50%,#edf0ed 0 75%,transparent 0);background-size:20px 20px;border:1px solid #dce5df;margin:16px 0}
+dialog h2{font-size:20px;margin:0}
+dialog p{font-size:14px}
+dialog a{display:inline-block;color:#236e58;margin-right:16px}
+#copy{margin-left:auto}
+@media(max-width:540px){body{padding-top:max(14px,env(safe-area-inset-top))}
+header{margin-bottom:14px}
+h1{font-size:24px}
+.badge{padding:7px;font-size:11px}
+.canvashead{padding:13px}
+.toolbar{gap:14px;padding:14px}
+.tool{font-size:13px}
+#copy{margin-left:0}
+.actions button{padding:11px 5px}
+#hint{font-size:20px}
+.intro{font-size:13px}
+}
+
+
+.export-options{display:flex;gap:18px;flex-wrap:wrap;margin-top:18px}
+
+.canvashead{align-items:center}
+
+.canvashead button{min-height:36px;padding:6px 12px;font-size:13px}
+
+dialog{max-height:90vh;overflow:auto}
+
+dialog img{max-height:55vh;object-fit:contain}
+
+body.focused header,body.focused .intro,body.focused .toolbar,body.focused .export-options,body.focused .filename,body.focused .actions,body.focused #status,body.focused .foot,body.focused details{display:none}
+
+body.focused{padding:12px;min-height:100vh;min-height:100dvh;display:grid;place-items:center}
+
+body.focused main{width:min(calc(100vw - 24px),calc((100dvh - 100px)*1.6));max-width:none}
+
+body.focused .card{border-radius:12px}
+
+@media(max-width:540px){.toolbar{gap:10px}
+.toolbar button{font-size:13px;padding:8px 12px}
+.export-options{gap:12px}
+.tool{font-size:12px}
+.color{width:34px;min-height:34px}
+}
+
+</style></head><body><main>
+<header><div><div class="eyebrow">LOCAL SIGNATURE</div><h1>写下你的签名</h1></div><span class="badge">本地处理 · 不上传</span></header>
+<p class="intro">用手指、手写笔或鼠标书写。签名仅在当前页面处理，不上传、不自动保存。</p>
+<section class="card" aria-label="手写签名区"><div class="canvashead"><span>签名画布</span><button id="focus" aria-pressed="false">专注书写</button></div>
+<div class="surface" id="surface"><canvas id="canvas" aria-label="请在此手写签名"></canvas><div id="hint">在这里签名<small>建议居中书写，四周留一点空白</small></div></div>
+<div class="toolbar"><button id="undo" disabled>撤销上一笔</button><button id="redo" disabled>恢复</button><label class="tool">笔粗 <input id="width" type="range" min="1" max="6" step="0.5" value="2.5"><output id="widthValue">2.5</output></label><div class="tool">颜色 <div class="colors" role="group" aria-label="笔迹颜色"><button class="color" data-color="#111111" aria-label="黑色" aria-pressed="true"></button><button class="color" data-color="#41464b" aria-label="深灰" aria-pressed="false"></button><button class="color" data-color="#164b9b" aria-label="蓝色" aria-pressed="false"></button></div></div><label class="tool"><input id="white" type="checkbox">显示白底</label><button id="copy" disabled>复制图片</button></div></section>
+<div class="export-options"><label class="tool"><input id="trim" type="checkbox" checked>自动裁去空白</label><label class="tool"><input id="penOnly" type="checkbox">仅手写笔（防手掌误触）</label></div>
+<label class="filename">文件名 <input id="filename" value="signature" maxlength="100" aria-label="导出文件名"><span>.png</span></label>
+<div class="actions"><button id="clear" disabled>重新签名</button><button id="save" class="primary" disabled>导出保存</button><button id="share" class="secondary" disabled>分享</button></div>
+<p id="status" role="status" aria-live="polite">准备就绪，开始书写吧。</p>
+<div class="foot">导出始终透明，宽度至少 1600 px；自动裁边便于放入表格。刷新或关闭页面会丢失尚未导出的签名。</div>
+<details><summary>手机保存与隐私说明</summary>
+<p>手机直接打开网页即可签名。点“导出保存”后，支持文件分享的浏览器会调起系统面板；可选“存储图像”、文件或聊天应用，实际选项由系统决定。不支持分享时尝试下载，并提供图片供长按保存。微信、QQ 内若受限制，请从右上角菜单选择“在浏览器中打开”。本工具无法自动把图片写入相册。</p>
+<p>画布内禁止滚动和缩放；画布外可正常滚动。“专注书写”隐藏其他工具，手机横屏时空间更宽。仅手写笔模式会忽略鼠标和手指，需要浏览器把输入识别为 pen；普通电容笔应关闭此选项。电脑支持 Ctrl / ⌘ + Z 撤销、Ctrl / ⌘ + Shift + Z 恢复。</p>
+<p>签名仅在当前页面内存中处理，无上传接口、无统计脚本、无本地存储；刷新或关闭即丢失。GitHub Pages 提供网页托管，访问网页仍会经过托管服务，签名笔迹不会发送给它。网页加载完成后可断网继续使用；需要保证离线重新打开时，可另存为 HTML。</p>
+<p>请由每位作者本人签署。本工具仅生成签名图片，不提供身份认证或数字签名证书。</p>
+</details>
+</main><dialog id="preview" aria-labelledby="previewTitle"><h2 id="previewTitle">签名图片已生成</h2><p>手机可长按图片，选择“保存图片 / 添加到照片”；也可使用下方下载。若当前应用限制保存，请用系统浏览器打开工具。</p><p id="imageSize"></p><img id="result" alt="透明背景签名图片"><a id="download">下载 PNG</a><button id="close">返回书写</button></dialog>
+<script>
+'use strict';
+// Local Signature: all coordinates and history stay in this page's memory.
+// Code-review references and pinned revisions are documented in SOURCE_REVIEW.md.
+const $ = id => document.getElementById(id);
+const canvas = $('canvas'), ctx = canvas.getContext('2d');
+const W = 1600, H = 1000, strokes = [], redoStack = [];
+const completed = document.createElement('canvas');
+let current = null, activeId = null, color = '#111111', frame = 0;
+let penUntil = 0, cacheDirty = true, savedScroll = 0;
+const status = text => { $('status').textContent = text; };
+
+function update() {
+  const empty = !strokes.length;
+  $('hint').style.display = empty ? 'grid' : 'none';
+  ['undo', 'clear', 'save', 'share', 'copy'].forEach(id => { $(id).disabled = empty || !!current; });
+  $('redo').disabled = !redoStack.length || !!current;
+}
+const mid = (a, b) => ({ x: (a.x+b.x)/2, y: (a.y+b.y)/2, w: (a.w+b.w)/2 });
+
+// Midpoint quadratic interpolation with overlapping discs for continuous width.
+// Like Signature Pad's _drawCurve, sample the curve densely, rather than changing
+// Canvas lineWidth abruptly between segments. This implementation retains pressure.
+function drawStroke(c, stroke) {
+  const points = stroke.points;
+  c.fillStyle = stroke.color;
+  c.beginPath();
+  const dot = p => { c.moveTo(p.x+p.w/2,p.y); c.arc(p.x,p.y,p.w/2,0,Math.PI*2); };
+  dot(points[0]);
+  let from = points[0];
+  for (let i=1; i<points.length; i++) {
+    const control = points[i-1], end = i===points.length-1 ? points[i] : mid(control,points[i]);
+    const length = Math.hypot(control.x-from.x,control.y-from.y)+Math.hypot(end.x-control.x,end.y-control.y);
+    const count = Math.max(1,Math.ceil(length*1.5));
+    for (let step=1; step<=count; step++) {
+      const t=step/count, u=1-t;
+      dot({x:u*u*from.x+2*u*t*control.x+t*t*end.x,
+        y:u*u*from.y+2*u*t*control.y+t*t*end.y, w:from.w+(end.w-from.w)*t});
+    }
+    from=end;
+  }
+  c.fill();
+}
+function paint() {
+  frame=0;
+  if (cacheDirty) {
+    completed.width=canvas.width; completed.height=canvas.height;
+    const c=completed.getContext('2d');
+    c.scale(canvas.width/W,canvas.height/H);
+    strokes.forEach(s => { if(s!==current) drawStroke(c,s); });
+    cacheDirty=false;
+  }
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.drawImage(completed,0,0);
+  ctx.setTransform(canvas.width/W,0,0,canvas.height/H,0,0);
+  if(current) drawStroke(ctx,current);
+}
+function schedule(rebuild=false) {
+  cacheDirty=cacheDirty||rebuild;
+  if(!frame) frame=requestAnimationFrame(paint);
+}
+function resize() {
+  // End an in-flight stroke before changing the coordinate mapping.
+  if(current) end({pointerId:activeId});
+  const r=canvas.getBoundingClientRect(), dpr=Math.min(devicePixelRatio||1,4);
+  const width=Math.max(W,Math.round(r.width*dpr));
+  if(canvas.width!==width) { canvas.width=width; canvas.height=Math.round(width*H/W); }
+  schedule(true);
+}
+function point(e) {
+  const r=canvas.getBoundingClientRect(), previous=current.points[current.points.length-1];
+  const x=Math.max(0,Math.min(W,(e.clientX-r.left)/r.width*W));
+  const y=Math.max(0,Math.min(H,(e.clientY-r.top)/r.height*H));
+  const time=e.timeStamp||performance.now();
+  const speed=previous ? Math.hypot(x-previous.x,y-previous.y)/Math.max(1,time-previous.time) : 0;
+  const velocity=previous ? .65*previous.velocity+.35*speed : 0;
+  const factor=e.pointerType==='pen' && e.pressure>0 ? .35+e.pressure*1.3 : .65+.5/(1+velocity/2);
+  const target=current.width*factor;
+  return {x,y,time,velocity,w:previous ? previous.w*.6+target*.4 : target};
+}
+function begin(e) {
+  if(current || e.button>0) return;
+  if($('penOnly').checked && e.pointerType!=='pen') return;
+  if(e.pointerType==='touch' && Date.now()<penUntil) return;
+  if(e.pointerType==='pen') penUntil=Date.now()+700;
+  activeId=e.pointerId;
+  current={color,width:Number($('width').value)*W/600,points:[]};
+  current.points.push(point(e)); strokes.push(current); redoStack.length=0;
+  update(); schedule();
+}
+function move(e) {
+  if(!current || e.pointerId!==activeId) return;
+  if(e.pointerType==='pen') penUntil=Date.now()+700;
+  const batch=e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
+  (batch.length ? batch : [e]).forEach(sample => {
+    const p=point(sample), last=current.points[current.points.length-1];
+    if(Math.hypot(p.x-last.x,p.y-last.y)>.4) current.points.push(p);
+  });
+  schedule();
+}
+function end(e) {
+  if(!current || e.pointerId!==activeId) return;
+  current=null; activeId=null; update(); schedule(true);
+  status('已记录 '+strokes.length+' 笔，可继续书写或导出。');
+}
+
+// Lock the first pointer: palm/second-finger events cannot finish or merge a stroke.
+if(window.PointerEvent) {
+  canvas.addEventListener('pointerdown',e => {
+    e.preventDefault(); begin(e);
+    if(activeId===e.pointerId) canvas.setPointerCapture(e.pointerId);
+  });
+  canvas.addEventListener('pointermove',e => { e.preventDefault(); move(e); });
+  canvas.addEventListener('pointerup',e => { move(e); end(e); });
+  ['pointercancel','lostpointercapture'].forEach(type => canvas.addEventListener(type,end));
+} else {
+  let touch=null;
+  const convert=(t,type) => ({clientX:t.clientX,clientY:t.clientY,pointerId:t.identifier??1,pointerType:type,button:0});
+  canvas.addEventListener('touchstart',e => {
+    e.preventDefault(); if(touch!==null) return;
+    touch=e.changedTouches[0].identifier; begin(convert(e.changedTouches[0],'touch'));
+  },{passive:false});
+  canvas.addEventListener('touchmove',e => {
+    e.preventDefault(); for(const t of e.changedTouches) if(t.identifier===touch) move(convert(t,'touch'));
+  },{passive:false});
+  for(const type of ['touchend','touchcancel']) canvas.addEventListener(type,e => {
+    e.preventDefault(); for(const t of e.changedTouches) if(t.identifier===touch) {
+      if(type==='touchend') move(convert(t,'touch'));
+      end(convert(t,'touch')); touch=null; penUntil=Date.now()+700;
+    }
+  },{passive:false});
+  canvas.addEventListener('mousedown',e => { if(e.button===0 && Date.now()>penUntil) begin(convert(e,'mouse')); });
+  window.addEventListener('mousemove',e => move(convert(e,'mouse')));
+  window.addEventListener('mouseup',e => end(convert(e,'mouse')));
+  $('penOnly').disabled=true;
+}
+canvas.addEventListener('contextmenu',e=>e.preventDefault());
+canvas.addEventListener('dblclick',e=>e.preventDefault());
+window.addEventListener('blur',()=>{ if(current) end({pointerId:activeId}); });
+window.addEventListener('resize',resize);
+if(window.ResizeObserver) new ResizeObserver(resize).observe(canvas);
+resize(); update();
+
+$('width').oninput=()=>{ $('widthValue').textContent=$('width').value; };
+document.querySelectorAll('.color').forEach(button=>button.onclick=()=>{
+  color=button.dataset.color;
+  document.querySelectorAll('.color').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));
+});
+$('white').onchange=()=>$('surface').classList.toggle('white',$('white').checked);
+$('undo').onclick=()=>{ redoStack.push(strokes.pop()); update(); schedule(true); status('已撤销上一笔，可用“恢复”找回。'); };
+$('redo').onclick=()=>{ strokes.push(redoStack.pop()); update(); schedule(true); status('已恢复上一笔。'); };
+$('clear').onclick=()=>{
+  if(confirm('清空全部笔迹并重新签名？')) {
+    strokes.length=0; redoStack.length=0; update(); schedule(true); status('画布已清空，请重新签名。');
+  }
+};
+$('focus').onclick=()=>{
+  const entering=!document.body.classList.contains('focused');
+  if(entering) savedScroll=window.scrollY;
+  document.body.classList.toggle('focused',entering);
+  $('focus').textContent=entering?'完成书写':'专注书写';
+  $('focus').setAttribute('aria-pressed',String(entering));
+  if(entering) window.scrollTo(0,0); else window.scrollTo(0,savedScroll);
+  resize();
+};
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape' && document.body.classList.contains('focused') && !$('preview').open) $('focus').click();
+  if(!(e.ctrlKey||e.metaKey) || /INPUT|TEXTAREA/.test(e.target.tagName) || e.target.isContentEditable) return;
+  const key=e.key.toLowerCase();
+  if(key==='z'||key==='y') {
+    e.preventDefault(); const id=key==='y'||e.shiftKey?'redo':'undo'; if(!$(id).disabled) $(id).click();
+  }
+});
+
+// Bounds include stroke radius and margins. Re-render vectors at export size:
+// cropping never enlarges a low-resolution bitmap. Very tall marks gain side
+// padding, limiting output height to 6400 pixels while retaining 1600px width.
+function exportBounds() {
+  if(!$('trim').checked) return {x:0,y:0,w:W,h:H};
+  let left=Infinity,top=Infinity,right=-Infinity,bottom=-Infinity;
+  for(const s of strokes) for(const p of s.points) {
+    const radius=p.w/2;
+    left=Math.min(left,p.x-radius); top=Math.min(top,p.y-radius);
+    right=Math.max(right,p.x+radius); bottom=Math.max(bottom,p.y+radius);
+  }
+  const pad=Math.max(24,Math.max(right-left,bottom-top)*.05);
+  let w=right-left+2*pad,h=bottom-top+2*pad;
+  w=Math.max(w,h/4); h=Math.max(h,w/8);
+  return {x:(left+right-w)/2,y:(top+bottom-h)/2,w,h};
+}
+function exported() {
+  if(!strokes.length||current) throw Error('请先完成签名');
+  const bounds=exportBounds(), c=document.createElement('canvas');
+  c.width=$('trim').checked?W:Math.max(W,canvas.width);
+  c.height=Math.round(c.width*bounds.h/bounds.w);
+  const g=c.getContext('2d'), scale=c.width/bounds.w;
+  g.setTransform(scale,0,0,scale,-bounds.x*scale,-bounds.y*scale);
+  strokes.forEach(s=>drawStroke(g,s));
+  const url=c.toDataURL('image/png'), raw=atob(url.split(',')[1]);
+  const bytes=new Uint8Array(raw.length);
+  for(let i=0;i<raw.length;i++) bytes[i]=raw.charCodeAt(i);
+  const name=$('filename').value.trim().replace(/\.png$/i,'').replace(/[<>:"/\\|?*\x00-\x1f]/g,'_').replace(/[. ]+$/g,'')||'signature';
+  return {url,blob:new Blob([bytes],{type:'image/png'}),name:name+'.png',width:c.width,height:c.height};
+}
+function preview(data) {
+  $('result').src=data.url; $('download').href=data.url; $('download').download=data.name;
+  $('imageSize').textContent=data.width+' × '+data.height+' px · 透明 PNG';
+  if(!$('preview').open) {
+    if($('preview').showModal) $('preview').showModal(); else $('preview').setAttribute('open','');
+  }
+}
+function download(data) {
+  preview(data);
+  // The link must be inside the dialog: modal dialogs make outside links inert.
+  $('download').click(); status('已尝试下载 PNG；若未保存，请在预览中长按图片。');
+}
+function deliver(wantsShare) {
+  try {
+    const data=exported();
+    const file=typeof File==='function'?new File([data.blob],data.name,{type:'image/png'}):null;
+    const mobile=matchMedia('(pointer:coarse)').matches||navigator.maxTouchPoints>1;
+    let canShare=false;
+    try { canShare=!!(file&&navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})); } catch(_) {}
+    if(canShare && (wantsShare||mobile)) {
+      // No await before share: preserve user activation on iOS.
+      try {
+        navigator.share({files:[file]}).then(()=>status('已交给系统分享，请在目标应用确认保存结果。')).catch(e=>{
+          if(e.name==='AbortError') status('已取消分享，签名仍保留。'); else download(data);
+        });
+      } catch(_) { download(data); }
+    } else download(data);
+  } catch(e) { status('生成图片失败：'+e.message); }
+}
+$('save').onclick=()=>deliver(false);
+$('share').onclick=()=>deliver(true);
+$('copy').onclick=()=>{
+  try {
+    const data=exported();
+    const fallback=()=>{ preview(data); status('复制不可用或权限受限，请下载或长按保存。'); };
+    if(!navigator.clipboard?.write||typeof ClipboardItem==='undefined') { fallback(); return; }
+    try {
+      navigator.clipboard.write([new ClipboardItem({'image/png':data.blob})])
+        .then(()=>status('图片已复制，可粘贴到支持图片的应用。')).catch(fallback);
+    } catch(_) { fallback(); }
+  } catch(e) { status(e.message); }
+};
+$('close').onclick=()=>{ if($('preview').close) $('preview').close(); else $('preview').removeAttribute('open'); };
+window.addEventListener('beforeunload',e=>{ if(strokes.length) { e.preventDefault(); e.returnValue=''; } });
+
+</script></body></html>
