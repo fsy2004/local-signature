@@ -18,7 +18,7 @@
 | signature_pad `tests/signature_pad.test.ts`: two-point groups、different pointer IDs | 覆盖短线重放和异指针过滤。 | 增加真实触屏模拟、异指针事件、笔模式及撤销后 PNG 一致性检查。未声称运行上游测试。 |
 | e-sign `src/js/app.js`: resizeCanvas、pushHistory、restoreHistory | 使用最多 40 张 ImageData 快照；resize 缩放当前位图，但 restoreHistory 仍 putImageData 旧快照。 | 不采用位图历史，避免内存随整幅分辨率增长及旋转后旧尺寸快照失配风险；保留点数据，完成笔画用单张缓存减轻每帧重绘。此风险来自代码审读，未对上游 UI 做独立复现。 |
 | e-sign `src/js/app.js`: continueStroke、endStroke | 中点二次曲线，结束时补到最终采样点。 | 保留短点、短线和末端；重绘与导出使用同一函数，避免重放后外形改变。 |
-| e-sign `src/js/app.js`: downloadPNG、copyToClipboard | 独立导出画布，可选择白底；异步 toBlob 后写剪贴板。 | 导出始终透明，新增矢量裁边和余白；同步生成 Blob 后立即调用分享/复制，减少丢失用户点击激活的风险。 |
+| e-sign `src/js/app.js`: downloadPNG、copyToClipboard | 独立导出画布，可选择白底；异步 toBlob 后写剪贴板。 | 后续按使用反馈调整为默认白底、可选透明，保留矢量裁边和余白；同步生成 Blob 后立即调用分享/复制，减少丢失用户点击激活的风险。 |
 | e-sign `src/index.html` 字体链接、app.js typed signature | 加载 Google Fonts，支持输入文字生成签名。 | 不加载远程字体，不添加字体代签；专注本人手写、单文件离线使用。 |
 
 ## 独立补充

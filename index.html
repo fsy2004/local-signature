@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="description" content="中文手写签名工具，手机、平板、电脑直接书写，导出透明 PNG。签名在浏览器本地处理，无需注册。">
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="description" content="中文手写签名工具，手机、平板、电脑直接书写，导出白底或透明 PNG。签名在浏览器本地处理，无需注册。">
 <meta name="referrer" content="no-referrer">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; connect-src 'none'; base-uri 'none'; form-action 'none'">
 <link rel="icon" href="data:,">
@@ -97,20 +97,21 @@ body.focused .card{border-radius:12px}
 <header><div><div class="eyebrow">LOCAL SIGNATURE</div><h1>写下你的签名</h1></div><span class="badge">本地处理 · 不上传</span></header>
 <p class="intro">用手指、手写笔或鼠标书写。签名仅在当前页面处理，不上传、不自动保存。</p>
 <section class="card" aria-label="手写签名区"><div class="canvashead"><span>签名画布</span><button id="focus" aria-pressed="false">专注书写</button></div>
-<div class="surface" id="surface"><canvas id="canvas" aria-label="请在此手写签名"></canvas><div id="hint">在这里签名<small>建议居中书写，四周留一点空白</small></div></div>
-<div class="toolbar"><button id="undo" disabled>撤销上一笔</button><button id="redo" disabled>恢复</button><label class="tool">笔粗 <input id="width" type="range" min="1" max="6" step="0.5" value="2.5"><output id="widthValue">2.5</output></label><div class="tool">颜色 <div class="colors" role="group" aria-label="笔迹颜色"><button class="color" data-color="#111111" aria-label="黑色" aria-pressed="true"></button><button class="color" data-color="#41464b" aria-label="深灰" aria-pressed="false"></button><button class="color" data-color="#164b9b" aria-label="蓝色" aria-pressed="false"></button></div></div><label class="tool"><input id="white" type="checkbox">显示白底</label><button id="copy" disabled>复制图片</button></div></section>
-<div class="export-options"><label class="tool"><input id="trim" type="checkbox" checked>自动裁去空白</label><label class="tool"><input id="penOnly" type="checkbox">仅手写笔（防手掌误触）</label></div>
+<div class="surface white" id="surface"><canvas id="canvas" aria-label="请在此手写签名"></canvas><div id="hint">在这里签名<small>建议居中书写，四周留一点空白</small></div></div>
+<div class="toolbar"><button id="undo" disabled>撤销上一笔</button><button id="redo" disabled>恢复</button><label class="tool">笔粗 <input id="width" type="range" min="1" max="6" step="0.5" value="2.5"><output id="widthValue">2.5</output></label><div class="tool">颜色 <div class="colors" role="group" aria-label="笔迹颜色"><button class="color" data-color="#111111" aria-label="黑色" aria-pressed="true"></button><button class="color" data-color="#41464b" aria-label="深灰" aria-pressed="false"></button><button class="color" data-color="#164b9b" aria-label="蓝色" aria-pressed="false"></button></div></div><label class="tool"><input id="white" type="checkbox" checked>显示白底</label><button id="copy" disabled>复制图片</button></div></section>
+<div class="export-options"><label class="tool"><input id="transparent" type="checkbox">导出透明背景（用于叠放）</label><label class="tool"><input id="trim" type="checkbox" checked>自动裁去空白</label><label class="tool"><input id="penOnly" type="checkbox">仅手写笔（防手掌误触）</label></div>
 <label class="filename">文件名 <input id="filename" value="signature" maxlength="100" aria-label="导出文件名"><span>.png</span></label>
 <div class="actions"><button id="clear" disabled>重新签名</button><button id="save" class="primary" disabled>导出保存</button><button id="share" class="secondary" disabled>分享</button></div>
 <p id="status" role="status" aria-live="polite">准备就绪，开始书写吧。</p>
-<div class="foot">导出始终透明，宽度至少 1600 px；自动裁边便于放入表格。刷新或关闭页面会丢失尚未导出的签名。</div>
+<div class="foot">默认导出白底 PNG；勾选“导出透明背景”可用于叠放。图片宽度至少 1600 px。刷新或关闭页面会丢失尚未导出的签名。</div>
 <details><summary>手机保存与隐私说明</summary>
 <p>手机直接打开网页即可签名。点“导出保存”后，支持文件分享的浏览器会调起系统面板；可选“存储图像”、文件或聊天应用，实际选项由系统决定。不支持分享时尝试下载，并提供图片供长按保存。微信、QQ 内若受限制，请从右上角菜单选择“在浏览器中打开”。本工具无法自动把图片写入相册。</p>
+<p>默认白底预览及白底导出，避免部分相册将透明区域显示成黑色。需要透明底插入文档时，勾选“导出透明背景”；“显示白底”只影响书写预览。</p>
 <p>画布内禁止滚动和缩放；画布外可正常滚动。“专注书写”隐藏其他工具，手机横屏时空间更宽。仅手写笔模式会忽略鼠标和手指，需要浏览器把输入识别为 pen；普通电容笔应关闭此选项。电脑支持 Ctrl / ⌘ + Z 撤销、Ctrl / ⌘ + Shift + Z 恢复。</p>
 <p>签名仅在当前页面内存中处理，无上传接口、无统计脚本、无本地存储；刷新或关闭即丢失。GitHub Pages 提供网页托管，访问网页仍会经过托管服务，签名笔迹不会发送给它。网页加载完成后可断网继续使用；需要保证离线重新打开时，可另存为 HTML。</p>
 <p>请由每位作者本人签署。本工具仅生成签名图片，不提供身份认证或数字签名证书。</p>
 </details>
-</main><dialog id="preview" aria-labelledby="previewTitle"><h2 id="previewTitle">签名图片已生成</h2><p>手机可长按图片，选择“保存图片 / 添加到照片”；也可使用下方下载。若当前应用限制保存，请用系统浏览器打开工具。</p><p id="imageSize"></p><img id="result" alt="透明背景签名图片"><a id="download">下载 PNG</a><button id="close">返回书写</button></dialog>
+</main><dialog id="preview" aria-labelledby="previewTitle"><h2 id="previewTitle">签名图片已生成</h2><p>手机可长按图片，选择“保存图片 / 添加到照片”；也可使用下方下载。若当前应用限制保存，请用系统浏览器打开工具。</p><p id="imageSize"></p><img id="result" alt="签名图片"><a id="download">下载 PNG</a><button id="close">返回书写</button></dialog>
 <script>
 'use strict';
 // Local Signature: all coordinates and history stay in this page's memory.
@@ -308,17 +309,19 @@ function exported() {
   c.width=$('trim').checked?W:Math.max(W,canvas.width);
   c.height=Math.round(c.width*bounds.h/bounds.w);
   const g=c.getContext('2d'), scale=c.width/bounds.w;
+  const transparent=$('transparent').checked;
+  if(!transparent) { g.fillStyle='#ffffff'; g.fillRect(0,0,c.width,c.height); }
   g.setTransform(scale,0,0,scale,-bounds.x*scale,-bounds.y*scale);
   strokes.forEach(s=>drawStroke(g,s));
   const url=c.toDataURL('image/png'), raw=atob(url.split(',')[1]);
   const bytes=new Uint8Array(raw.length);
   for(let i=0;i<raw.length;i++) bytes[i]=raw.charCodeAt(i);
   const name=$('filename').value.trim().replace(/\.png$/i,'').replace(/[<>:"/\\|?*\x00-\x1f]/g,'_').replace(/[. ]+$/g,'')||'signature';
-  return {url,blob:new Blob([bytes],{type:'image/png'}),name:name+'.png',width:c.width,height:c.height};
+  return {url,blob:new Blob([bytes],{type:'image/png'}),name:name+'.png',width:c.width,height:c.height,transparent};
 }
 function preview(data) {
   $('result').src=data.url; $('download').href=data.url; $('download').download=data.name;
-  $('imageSize').textContent=data.width+' × '+data.height+' px · 透明 PNG';
+  $('imageSize').textContent=data.width+' × '+data.height+' px · '+(data.transparent?'透明':'白底')+' PNG';
   if(!$('preview').open) {
     if($('preview').showModal) $('preview').showModal(); else $('preview').setAttribute('open','');
   }

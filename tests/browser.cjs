@@ -55,11 +55,17 @@ async function exportImage(page) {
   page.on('pageerror',e=>errors.push(e.message));page.on('request',r=>{if(/^https?:/.test(r.url()))requests.push(r.url());});
   await page.goto(target);await context.setOffline(true); // The loaded page needs no network.
   assert(await page.locator('#save').isDisabled());
+  assert(await page.locator('#white').isChecked());
+  assert.equal(await page.locator('#surface').evaluate(e=>e.classList.contains('white')),true);
   await draw(page,context,touch);await page.locator('#filename').fill('作者签名.png');
+  const white=await exportImage(page);assert.equal(white.pixels.transparent,0,'default export is opaque white');
+  const whiteCorner=await page.evaluate(async url=>{const img=new Image();img.src=url;await img.decode();const c=document.createElement('canvas');const g=c.getContext('2d');g.drawImage(img,0,0);return Array.from(g.getImageData(0,0,1,1).data);},white.result);
+  assert.deepEqual(whiteCorner,[255,255,255,255]);
+  await page.locator('#transparent').check();
   const first=await exportImage(page);assert.equal(first.name,'作者签名.png');
   assert.equal(first.pixels.width,1600);assert(first.pixels.ink>0 && first.pixels.transparent>0 && first.pixels.edge>0);
   assert(first.pixels.minX>0 && first.pixels.minY>0 && first.pixels.maxX<1599,'crop has transparent margin');
-  await page.locator('#white').check();assert.equal((await exportImage(page)).result,first.result,'white preview must not change PNG');
+  await page.locator('#white').uncheck();assert.equal((await exportImage(page)).result,first.result,'preview must not change PNG background');
   await page.locator('#undo').click();assert(await page.locator('#save').isDisabled());
   await page.locator('#redo').click();assert.equal((await exportImage(page)).result,first.result,'redo restores identical PNG');
   await page.setViewportSize({width:height,height:width});
